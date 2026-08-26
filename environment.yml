@@ -1,0 +1,13 @@
+name: restaurant-risk
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.12
+  - duckdb
+  - pyarrow
+  - pandas
+  - jupyterlab
+  - pytest
+  - ruff
