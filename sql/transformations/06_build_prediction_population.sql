@@ -1,25 +1,21 @@
--- 06_build_prediction_examples.sql
+-- 06_build_prediction_population.sql
 -- Purpose:
---     Build historical prediction examples.
+--     Build the historical prediction population.
 
-CREATE OR REPLACE TABLE processed.prediction_examples AS
+CREATE OR REPLACE TABLE processed.prediction_population AS
 
 WITH eligible_inspections AS (
     SELECT
         camis,
         inspection_date,
-        inspection_type,
-        has_critical_violation,
-        score,
-        grade
+        inspection_type
     FROM processed.inspections
     WHERE inspection_type LIKE 'Cycle Inspection /%'
 ),
 
-examples AS (
+population AS (
     SELECT
         camis,
-
         inspection_date AS cutoff_date,
 
         LEAD(inspection_date) OVER (
@@ -30,12 +26,7 @@ examples AS (
         LEAD(inspection_type) OVER (
             PARTITION BY camis
             ORDER BY inspection_date
-        ) AS target_inspection_type,
-
-        LEAD(has_critical_violation) OVER (
-            PARTITION BY camis
-            ORDER BY inspection_date
-        ) AS target_critical
+        ) AS target_inspection_type
 
     FROM eligible_inspections
 )
@@ -44,7 +35,6 @@ SELECT
     camis,
     cutoff_date,
     target_inspection_date,
-    target_inspection_type,
-    target_critical
-FROM examples
+    target_inspection_type
+FROM population
 WHERE target_inspection_date IS NOT NULL;
