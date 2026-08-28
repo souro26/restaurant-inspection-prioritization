@@ -122,7 +122,7 @@ base_features AS (
             h.last_cycle_inspection_date,
             h.scoring_date
         ) AS days_since_last_cycle_inspection,
-        h.last_critical_inspection_date
+        h.last_critical_inspection_date,
         DATE_DIFF(
             'day',
             h.last_critical_inspection_date,

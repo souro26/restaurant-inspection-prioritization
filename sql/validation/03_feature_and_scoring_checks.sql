@@ -41,7 +41,7 @@ SELECT
     'future_event_in_feature_history' AS check_name,
     *
 FROM processed.features
-WHERE feature_source_max_date > cutoff_date;
+WHERE last_cycle_inspection_date > cutoff_date;
 
 SELECT
     'negative_feature_counts' AS check_name,

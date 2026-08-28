@@ -4,6 +4,7 @@
 
 CREATE OR REPLACE TABLE processed.deduplicated_inspection_rows AS
 SELECT DISTINCT * FROM processed.normalized_inspection_rows;
+
 CREATE OR REPLACE TABLE processed.deduplication_audit AS
 SELECT
     (

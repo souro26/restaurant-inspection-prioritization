@@ -43,7 +43,7 @@ SELECT
     TRY_CAST(BIN AS VARCHAR) AS bin,
     TRY_CAST(BBL AS VARCHAR) AS bbl,
     NULLIF(TRIM(NTA), '') AS nta,
-    NULLIF(TRIM(Location) AS VARCHAR, '') AS location,
+    NULLIF(TRIM(Location), '') AS location,
     md5(
         CONCAT_WS(
             '|',
