@@ -1,35 +1,181 @@
 -- 09_build_scoring_population.sql
 -- Purpose:
---     Build the current restaurant population to be scored.
+--     Build the current batch-scoring population.
 
 CREATE OR REPLACE TABLE processed.scoring_population AS
-WITH latest_cycle_inspection AS (
+WITH scoring_run AS (
     SELECT
-        camis,
-        MAX(inspection_date) AS cutoff_date
+        MAX(inspection_date) AS scoring_date
     FROM processed.inspections
-    WHERE inspection_type LIKE 'Cycle Inspection /%'
-    GROUP BY camis
+    WHERE inspection_date IS NOT NULL
+),
+eligible_restaurants AS (
+    SELECT DISTINCT
+        i.camis
+    FROM processed.inspections i
+    WHERE i.is_eligible_historical_event = TRUE
+),
+historical_inspections AS (
+    SELECT
+        r.camis,
+        s.scoring_date,
+        COUNT(i.inspection_id) AS prior_cycle_inspection_count,
+        COUNT(*) FILTER (
+            WHERE i.is_cycle_initial
+        ) AS prior_cycle_initial_count,
+        COUNT(*) FILTER (
+            WHERE i.is_cycle_reinspection
+        ) AS prior_cycle_reinspection_count,
+        COUNT(*) FILTER (
+            WHERE i.has_critical_violation
+        ) AS prior_critical_inspection_count,
+        COUNT(*) FILTER (
+            WHERE i.is_cycle_initial
+              AND i.has_critical_violation
+        ) AS prior_cycle_initial_critical_count,
+        COUNT(*) FILTER (
+            WHERE i.is_cycle_reinspection
+              AND i.has_critical_violation
+        ) AS prior_cycle_reinspection_critical_count,
+        SUM(COALESCE(i.critical_violation_count, 0))
+            AS prior_critical_violation_count,
+        MAX(i.inspection_date) AS last_cycle_inspection_date,
+        MAX(
+            CASE
+                WHEN i.has_critical_violation
+                THEN i.inspection_date
+            END
+        ) AS last_critical_inspection_date,
+        MAX(i.score) AS max_historical_score,
+        AVG(i.score) AS average_historical_score,
+        COUNT(*) FILTER (
+            WHERE i.inspection_date >= s.scoring_date - INTERVAL '365 days'
+        ) AS cycle_inspections_last_365d,
+        COUNT(*) FILTER (
+            WHERE i.inspection_date >= s.scoring_date - INTERVAL '365 days'
+              AND i.has_critical_violation
+        ) AS critical_cycle_inspections_last_365d,
+        AVG(
+            CASE
+                WHEN i.inspection_date >= s.scoring_date - INTERVAL '365 days'
+                THEN i.score
+            END
+        ) AS average_score_last_365d
+    FROM eligible_restaurants r
+    CROSS JOIN scoring_run s
+    LEFT JOIN processed.inspections i
+        ON i.camis = r.camis
+       AND i.inspection_date <= s.scoring_date
+       AND i.is_eligible_historical_event = TRUE
+    GROUP BY
+        r.camis,
+        s.scoring_date
+),
+historical_violations AS (
+    SELECT
+        r.camis,
+        s.scoring_date,
+        COUNT(v.violation_code) AS prior_total_violations,
+        COUNT(*) FILTER (
+            WHERE v.critical_flag = 'Critical'
+        ) AS prior_critical_violation_rows,
+        COUNT(v.violation_code) FILTER (
+            WHERE v.inspection_date >= s.scoring_date - INTERVAL '365 days'
+        ) AS violations_last_365d,
+        COUNT(*) FILTER (
+            WHERE v.critical_flag = 'Critical'
+              AND v.inspection_date >= s.scoring_date - INTERVAL '365 days'
+        ) AS critical_violations_last_365d
+    FROM eligible_restaurants r
+    CROSS JOIN scoring_run s
+    LEFT JOIN processed.violations v
+        ON v.camis = r.camis
+       AND v.inspection_date <= s.scoring_date
+       AND v.inspection_type IN (
+            'Cycle Inspection / Initial Inspection',
+            'Cycle Inspection / Re-inspection'
+       )
+    GROUP BY
+        r.camis,
+        s.scoring_date
+),
+base_features AS (
+    SELECT
+        h.camis,
+        h.scoring_date AS cutoff_date,
+        h.prior_cycle_inspection_count,
+        h.prior_cycle_initial_count,
+        h.prior_cycle_reinspection_count,
+        h.prior_critical_inspection_count,
+        h.prior_cycle_initial_critical_count,
+        h.prior_cycle_reinspection_critical_count,
+        h.prior_critical_violation_count,
+        CASE
+            WHEN h.prior_cycle_inspection_count = 0 THEN 0.0
+            ELSE
+                1.0 * h.prior_critical_inspection_count
+                / h.prior_cycle_inspection_count
+        END AS prior_critical_inspection_rate,
+        h.last_cycle_inspection_date,
+        DATE_DIFF(
+            'day',
+            h.last_cycle_inspection_date,
+            h.scoring_date
+        ) AS days_since_last_cycle_inspection,
+        h.last_critical_inspection_date
+        DATE_DIFF(
+            'day',
+            h.last_critical_inspection_date,
+            h.scoring_date
+        ) AS days_since_last_critical_inspection,
+        h.max_historical_score,
+        h.average_historical_score,
+        h.average_score_last_365d,
+        h.cycle_inspections_last_365d,
+        h.critical_cycle_inspections_last_365d,
+        COALESCE(v.prior_total_violations, 0)
+            AS prior_total_violations,
+        COALESCE(v.prior_critical_violation_rows, 0)
+            AS prior_critical_violation_rows,
+        COALESCE(v.violations_last_365d, 0)
+            AS violations_last_365d,
+        COALESCE(v.critical_violations_last_365d, 0)
+            AS critical_violations_last_365d
+    FROM historical_inspections h
+    LEFT JOIN historical_violations v
+        ON v.camis = h.camis
+       AND v.scoring_date = h.scoring_date
+),
+final_features AS (
+    SELECT
+        *,
+        CASE
+            WHEN prior_cycle_initial_count = 0 THEN '0'
+            WHEN prior_cycle_initial_count = 1 THEN '1'
+            WHEN prior_cycle_initial_count BETWEEN 2 AND 3 THEN '2-3'
+            ELSE '4+'
+        END AS history_depth_bucket,
+
+        CASE
+            WHEN prior_cycle_initial_count = 0 THEN TRUE
+            ELSE FALSE
+        END AS has_no_cycle_initial_history
+    FROM base_features
 )
 SELECT
-    r.camis,
+    f.*,
     r.restaurant_name,
     r.borough,
-    r.building,
-    r.street,
-    r.zipcode,
-    r.phone,
     r.cuisine_description,
-    r.latitude,
-    r.longitude,
-    r.community_board,
-    r.council_district,
-    r.census_tract,
-    r.bin,
-    r.bbl,
+    r.zipcode,
     r.nta,
-
-    l.cutoff_date AS latest_cycle_inspection
-FROM processed.restaurants r
-JOIN latest_cycle_inspection l
-    ON l.camis = r.camis;
+    r.community_board,
+    TRUE AS is_eligible_for_scoring,
+    CASE
+        WHEN f.prior_cycle_initial_count = 0
+            THEN 'limited_cycle_initial_history'
+        ELSE 'eligible'
+    END AS scoring_eligibility_reason
+FROM final_features f
+LEFT JOIN processed.restaurants r
+    ON r.camis = f.camis;
