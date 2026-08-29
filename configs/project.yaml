@@ -9,7 +9,7 @@ source:
   bulk_csv_url: "https://data.cityofnewyork.us/api/views/43nn-pn8j/rows.csv?accessType=DOWNLOAD"
 
 database:
-  path: "data/warehouse.duckdb"
+  path: "data/restaurant_risk.duckdb"
 
 pipeline:
   sql_directory: "sql"
