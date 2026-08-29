@@ -1,0 +1,16 @@
+hard_failures:
+  max_unexpected_critical_flag_rate: 0.0
+  max_duplicate_restaurant_rate: 0.0
+  max_duplicate_inspection_event_rate: 0.0
+  max_orphan_violation_rate: 0.0
+  max_invalid_target_date_rate: 0.0
+  max_feature_future_date_rate: 0.0
+  max_invalid_label_rate: 0.0
+
+warnings:
+  max_unparseable_inspection_date_rate: 0.01
+  max_missing_borough_rate: 0.01
+  max_missing_cuisine_rate: 0.05
+  max_missing_location_rate: 0.25
+  max_event_attribute_conflict_rate: 0.01
+  max_source_row_count_change_rate: 0.30

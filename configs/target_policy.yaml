@@ -1,0 +1,21 @@
+target:
+  positive_critical_flag: "Critical"
+  invalid_inspection_date: "1900-01-01"
+
+  target_inspection_types:
+    - "Cycle Inspection / Initial Inspection"
+
+  historical_inspection_types:
+    - "Cycle Inspection / Initial Inspection"
+    - "Cycle Inspection / Re-inspection"
+
+  excluded_inspection_types:
+    - "Pre-permit (Operational) / Initial Inspection"
+    - "Pre-permit (Operational) / Re-inspection"
+    - "Administrative Misc. / Initial Inspection"
+    - "Administrative Misc. / Re-inspection"
+    - "Smoke-Free Air Act"
+    - "Trans Fat"
+    - "Calorie Posting"
+    - "Sodium Warning"
+    - "Inter-Agency Task Force"

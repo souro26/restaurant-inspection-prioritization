@@ -1,0 +1,21 @@
+project:
+  name: restaurant-inspection-prioritization
+  random_seed: 42
+  timezone: America/New_York
+
+source:
+  dataset_id: "43nn-pn8j"
+  source_name: "NYC DOHMH Restaurant Inspection Results"
+  bulk_csv_url: "https://data.cityofnewyork.us/api/views/43nn-pn8j/rows.csv?accessType=DOWNLOAD"
+
+database:
+  path: "data/warehouse.duckdb"
+
+pipeline:
+  sql_directory: "sql"
+  raw_table: "raw_inspection"
+
+artifacts:
+  runs_directory: "runs"
+  models_directory: "model_artifacts"
+  reports_directory: "reports"
