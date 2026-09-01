@@ -1,21 +1,25 @@
 target:
-  positive_critical_flag: "Critical"
-  invalid_inspection_date: "1900-01-01"
+  target_name: high_severity_critical_inspection_outcome
 
-  target_inspection_types:
+  target_event_type:
     - "Cycle Inspection / Initial Inspection"
 
-  historical_inspection_types:
-    - "Cycle Inspection / Initial Inspection"
-    - "Cycle Inspection / Re-inspection"
+  positive_rule:
+    field: critical_violation_count
+    operator: ">="
+    threshold: 3
 
-  excluded_inspection_types:
-    - "Pre-permit (Operational) / Initial Inspection"
-    - "Pre-permit (Operational) / Re-inspection"
-    - "Administrative Misc. / Initial Inspection"
-    - "Administrative Misc. / Re-inspection"
-    - "Smoke-Free Air Act"
-    - "Trans Fat"
-    - "Calorie Posting"
-    - "Sodium Warning"
-    - "Inter-Agency Task Force"
+  interpretation: >
+    A target inspection is positive when the next eligible routine
+    cycle-initial inspection contains three or more recorded critical
+    violations. This is a project-defined operational severity threshold
+    for retrospective inspection-prioritization evaluation; it is not an
+    official closure threshold or a statement of current restaurant safety.
+
+historical_events:
+  - "Cycle Inspection / Initial Inspection"
+  - "Cycle Inspection / Re-inspection"
+
+excluded_from_target_and_primary_history: >
+  All inspection types other than the two explicitly listed historical
+  cycle-inspection types are excluded from the primary model.
