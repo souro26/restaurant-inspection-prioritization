@@ -1,7 +1,3 @@
--- 03_feature_and_scoring_checks.sql
--- Purpose:
---     Validate point-in-time features and deployment scoring inputs.
-
 SELECT
     'duplicate_feature_rows' AS check_name,
     cutoff_inspection_id,
@@ -9,7 +5,6 @@ SELECT
 FROM processed.features
 GROUP BY cutoff_inspection_id
 HAVING COUNT(*) > 1;
-
 SELECT
     'feature_label_count_match' AS check_name,
     CASE
@@ -24,7 +19,6 @@ FROM (
         (SELECT COUNT(*) FROM processed.features) AS feature_rows,
         (SELECT COUNT(*) FROM processed.labels) AS label_rows
 );
-
 SELECT
     'features_map_to_prediction_population' AS check_name,
     CASE
@@ -36,13 +30,11 @@ FROM processed.features f
 LEFT JOIN processed.prediction_population p
     ON p.cutoff_inspection_id = f.cutoff_inspection_id
 WHERE p.cutoff_inspection_id IS NULL;
-
 SELECT
     'future_event_in_feature_history' AS check_name,
     *
 FROM processed.features
 WHERE last_cycle_inspection_date > cutoff_date;
-
 SELECT
     'negative_feature_counts' AS check_name,
     *
@@ -54,7 +46,6 @@ WHERE prior_cycle_inspection_count < 0
    OR prior_critical_violation_count < 0
    OR cycle_inspections_last_365d < 0
    OR critical_cycle_inspections_last_365d < 0;
-
 SELECT
     'inconsistent_feature_counts' AS check_name, *
 FROM processed.features
@@ -68,7 +59,6 @@ WHERE prior_cycle_initial_count + prior_cycle_reinspection_count
         > prior_cycle_reinspection_count
    OR critical_cycle_inspections_last_365d
         > cycle_inspections_last_365d;
-
 SELECT
     'invalid_critical_inspection_rate' AS check_name,
     *
@@ -76,7 +66,6 @@ FROM processed.features
 WHERE prior_critical_inspection_rate < 0
    OR prior_critical_inspection_rate > 1
    OR prior_critical_inspection_rate IS NULL;
-
 SELECT
     'invalid_history_depth_bucket' AS check_name,
     *
@@ -93,7 +82,6 @@ WHERE
     OR
     (prior_cycle_initial_count >= 4
         AND history_depth_bucket <> '4+');
-
 SELECT
     'scoring_population_uniqueness' AS check_name,
     CASE
@@ -104,7 +92,6 @@ SELECT
     COUNT(DISTINCT camis) AS unique_restaurants,
     COUNT(*) - COUNT(DISTINCT camis) AS duplicate_restaurants
 FROM processed.scoring_population;
-
 SELECT
     'scoring_date_consistency' AS check_name,
     CASE
@@ -115,7 +102,6 @@ SELECT
     MAX(cutoff_date) AS max_scoring_date,
     COUNT(DISTINCT cutoff_date) AS distinct_scoring_dates
 FROM processed.scoring_population;
-
 SELECT
     'history_depth_distribution' AS check_name,
     history_depth_bucket,
