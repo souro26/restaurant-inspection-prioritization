@@ -20,7 +20,7 @@ INNER JOIN processed.labels AS l
     ON f.cutoff_inspection_id = l.cutoff_inspection_id
 """
 
-def load_modelling_dataset(database_path: Path) -> pd.DataFrame:
+def load_modeling_dataset(database_path: Path) -> pd.DataFrame:
     """ Load the features and future labels,"""
     connection = duckdb.connect(str(database_path), read_only = True)
     try:
