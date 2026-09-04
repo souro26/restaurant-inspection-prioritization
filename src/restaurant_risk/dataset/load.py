@@ -21,7 +21,7 @@ INNER JOIN processed.labels AS l
 """
 
 def load_modeling_dataset(database_path: Path) -> pd.DataFrame:
-    """ Load the features and future labels,"""
+    """Load the features and future labels,"""
     connection = duckdb.connect(str(database_path), read_only = True)
     try:
         df = connection.execute(MODEL_DATASET_QUERY).df()
@@ -29,5 +29,22 @@ def load_modeling_dataset(database_path: Path) -> pd.DataFrame:
         connection.close()
     df.cutoff_date = pd.to_datetime(df.cutoff_date)
     df.target_inspection_date = pd.to_datetime(df.target_inspection_date)
+
+    return df
+
+SCORING_POPULATION_QUERY = """
+SELECT *
+FROM processed.scoring_population
+"""
+
+def load_scoring_population(database_path: Path) -> pd.DataFrame:
+    """Load the current restaurant population used for model scoring."""
+    connection = duckdb.connect(str(database_path), read_only=True)
+    try:
+        df = connection.execute(SCORING_POPULATION_QUERY).df()
+    finally:
+        connection.close()
+
+    df.cutoff_date = pd.to_datetime(df.cutoff_date)
 
     return df
