@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
@@ -9,6 +10,7 @@ from restaurant_risk.modeling.features import (
     get_target_vector,
     validate_model_feature_schema,
 )
+
 
 def build_logistic_regression_pipeline(c: float = 1.0, max_iter: int = 1000, random_state: int = 42) -> Pipeline:
     """Build the first multivariable ML model."""

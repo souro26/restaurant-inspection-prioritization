@@ -1,5 +1,7 @@
 from __future__ import annotations
-import pandas as pd 
+
+import pandas as pd
+
 from restaurant_risk.evaluation.ranking import select_top_k
 
 TARGET_COLUMN = "target_high_severity"

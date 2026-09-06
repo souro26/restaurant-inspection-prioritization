@@ -5,11 +5,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from restaurant_risk.config import load_config
+from restaurant_risk.config import ProjectConfig, load_config
 from restaurant_risk.dataset.load import load_scoring_population
 from restaurant_risk.modeling.artifacts import load_model_artifacts
 from restaurant_risk.modeling.features import get_feature_matrix
-
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -36,39 +35,20 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main() -> None:
-    """Score the current restaurant population."""
-    args = parse_args()
-
-    if args.capacity <= 0:
+def score_restaurants(
+    df: pd.DataFrame,
+    config: ProjectConfig,
+    capacity: int,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Score restaurants and create a priority queue."""
+    if capacity <= 0:
         raise ValueError(
             "Capacity must be a positive integer."
         )
 
-    config = load_config(PROJECT_ROOT)
-
-    all_scores_path = (
-        config.output_directory
-        / "restaurant_risk_scores.csv"
-    )
-
-    priority_queue_path = (
-        config.output_directory
-        / "restaurant_priority_queue.csv"
-    )
-
-    config.output_directory.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    df = load_scoring_population(
-        config.database_path
-    )
-
-    if args.capacity > len(df):
+    if capacity > len(df):
         raise ValueError(
-            f"Capacity ({args.capacity}) exceeds the "
+            f"Capacity ({capacity}) exceeds the "
             f"number of scorable restaurants ({len(df)})."
         )
 
@@ -129,14 +109,48 @@ def main() -> None:
         scored.index + 1
     )
 
+    priority_queue = (
+        scored.head(capacity)
+        .copy()
+    )
+
+    return scored, priority_queue
+
+
+def main() -> None:
+    """Score the current restaurant population."""
+    args = parse_args()
+
+    config = load_config(PROJECT_ROOT)
+
+    all_scores_path = (
+        config.output_directory
+        / "restaurant_risk_scores.csv"
+    )
+
+    priority_queue_path = (
+        config.output_directory
+        / "restaurant_priority_queue.csv"
+    )
+
+    config.output_directory.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    df = load_scoring_population(
+        config.database_path
+    )
+
+    scored, priority_queue = score_restaurants(
+        df=df,
+        config=config,
+        capacity=args.capacity,
+    )
+
     scored.to_csv(
         all_scores_path,
         index=False,
-    )
-
-    priority_queue = (
-        scored.head(args.capacity)
-        .copy()
     )
 
     priority_queue.to_csv(

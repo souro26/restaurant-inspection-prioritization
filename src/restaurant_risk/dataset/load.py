@@ -1,7 +1,9 @@
 from __future__ import annotations
+
 from pathlib import Path
-import pandas as pd 
+
 import duckdb
+import pandas as pd
 
 MODEL_DATASET_QUERY = """
 SELECT

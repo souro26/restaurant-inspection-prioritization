@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 from typing import Final
-import pandas as pd 
+
+import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline

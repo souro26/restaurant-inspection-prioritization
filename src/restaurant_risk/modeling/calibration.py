@@ -29,7 +29,7 @@ class SigmoidCalibrator:
         self,
         model: Pipeline,
         calibration_df: pd.DataFrame,
-    ) -> "SigmoidCalibrator":
+    ) -> SigmoidCalibrator:
         """
         Fit the sigmoid calibration mapping using a held-out
         temporal calibration dataset.

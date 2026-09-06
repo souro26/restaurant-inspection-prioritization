@@ -1,13 +1,37 @@
 from __future__ import annotations
-import pandas as pd 
 
-def select_top_k(data: pd.DataFrame, score_column: str, capacity: str, restaurant_id_column: str = "camis") -> pd.DataFrame:
-    """Return the highest-risk rows under a fixed inspection capacity."""
+import pandas as pd
+
+
+def select_top_k(
+    data: pd.DataFrame,
+    score_column: str,
+    capacity: int,
+    restaurant_id_column: str = "camis",
+) -> pd.DataFrame:
+    """Select the highest-scoring restaurants."""
     if capacity <= 0:
-        raise ValueError("Capacity must be positive.")
+        raise ValueError(
+            "Capacity must be a positive integer."
+        )
+
     if score_column not in data.columns:
-        raise KeyError(f"{score_column} not found in data.")
+        raise ValueError(
+            f"Score column not found: {score_column}"
+        )
+
     if restaurant_id_column not in data.columns:
-        raise KeyError(f"{restaurant_id_column} not found in data.")
-    return data.sort_values(by = [score_column, restaurant_id_column], ascending=[False, True]).head(capacity).reset_index(drop=True).copy()
-    
+        raise ValueError(
+            "Restaurant ID column not found: "
+            f"{restaurant_id_column}"
+        )
+
+    return (
+        data.sort_values(
+            score_column,
+            ascending=False,
+            kind="stable",
+        )
+        .head(capacity)
+        .reset_index(drop=True)
+    )
