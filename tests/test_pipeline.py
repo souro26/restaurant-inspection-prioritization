@@ -1,4 +1,3 @@
-
 import duckdb
 import pytest
 
@@ -66,9 +65,7 @@ def test_run_transformations_rejects_invalid_sql(
     tmp_path,
 ):
     """Invalid transformation SQL should raise TransformationError."""
-    transformation_directory = (
-        tmp_path / "sql" / "transformations"
-    )
+    transformation_directory = tmp_path / "sql" / "transformations"
     transformation_directory.mkdir(
         parents=True,
     )

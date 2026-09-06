@@ -62,9 +62,7 @@ class SigmoidCalibrator:
         Return calibrated probabilities for both classes.
         """
         if not self.is_fitted:
-            raise RuntimeError(
-                "SigmoidCalibrator must be fitted before prediction."
-            )
+            raise RuntimeError("SigmoidCalibrator must be fitted before prediction.")
 
         X = get_feature_matrix(data_to_score)
 

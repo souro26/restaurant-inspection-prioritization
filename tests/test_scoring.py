@@ -102,9 +102,7 @@ def test_score_restaurants_orders_by_calibrated_probability(
     assert len(scored) == 5
     assert len(priority_queue) == 3
 
-    assert scored[
-        "calibrated_high_severity_probability"
-    ].is_monotonic_decreasing
+    assert scored["calibrated_high_severity_probability"].is_monotonic_decreasing
 
     assert scored["priority_rank"].tolist() == [
         1,

@@ -2,18 +2,50 @@
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
+
 [project]
 name = "restaurant-inspection-prioritization"
 version = "0.1.0"
 description = "Leakage-safe longitudinal modeling for NYC restaurant inspection prioritization."
 requires-python = ">=3.12,<3.13"
+dependencies = [
+    "duckdb",
+    "joblib",
+    "numpy",
+    "pandas",
+    "pyarrow",
+    "pyyaml",
+    "scikit-learn",
+    "fastapi",
+    "uvicorn",
+]
+
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
+
 [tool.pytest.ini_options]
+pythonpath = ["src"]
 testpaths = ["tests"]
+
 
 [tool.ruff]
 line-length = 88
 target-version = "py312"
+
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "UP",
+    "B",
+    "RET",
+]
+
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

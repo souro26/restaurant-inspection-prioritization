@@ -13,9 +13,7 @@ def test_load_project_config():
     assert config.project_name == "restaurant-inspection-prioritization"
     assert config.random_seed == 42
 
-    assert config.database_path == (
-        project_root / "data" / "restaurant_risk.duckdb"
-    )
+    assert config.database_path == (project_root / "data" / "restaurant_risk.duckdb")
 
     assert config.sql_directory == project_root / "sql"
 
@@ -24,9 +22,7 @@ def test_load_project_config():
     )
 
     assert config.calibrator_path == (
-        project_root
-        / "models"
-        / "logistic_regression_C1_sigmoid_calibrator.joblib"
+        project_root / "models" / "logistic_regression_C1_sigmoid_calibrator.joblib"
     )
 
     assert config.output_directory == project_root / "output"

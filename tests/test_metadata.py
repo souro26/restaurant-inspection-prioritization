@@ -20,16 +20,9 @@ def test_run_metadata_writes_json(tmp_path):
 
     assert output_path.exists()
 
-    data = json.loads(
-        output_path.read_text(
-            encoding="utf-8"
-        )
-    )
+    data = json.loads(output_path.read_text(encoding="utf-8"))
 
     assert data["run_id"] == "20260906T120000Z"
     assert data["status"] == "SUCCESS"
     assert data["duration_seconds"] == 5.0
-    assert (
-        data["project_name"]
-        == "restaurant-inspection-prioritization"
-    )
+    assert data["project_name"] == "restaurant-inspection-prioritization"

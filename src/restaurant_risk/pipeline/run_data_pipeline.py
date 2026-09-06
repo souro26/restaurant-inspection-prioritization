@@ -27,14 +27,10 @@ def execute_sql_file(
 ) -> None:
     """Execute a DuckDB SQL script."""
     if not sql_file.exists():
-        raise error_type(
-            f"SQL file not found: {sql_file}"
-        )
+        raise error_type(f"SQL file not found: {sql_file}")
 
     try:
-        display_path = sql_file.relative_to(
-            PROJECT_ROOT
-        )
+        display_path = sql_file.relative_to(PROJECT_ROOT)
     except ValueError:
         display_path = sql_file
 
@@ -44,18 +40,12 @@ def execute_sql_file(
     )
 
     try:
-        sql = sql_file.read_text(
-            encoding="utf-8"
-        )
+        sql = sql_file.read_text(encoding="utf-8")
         connection.execute(sql)
     except duckdb.Error as exc:
-        raise error_type(
-            f"SQL execution failed: {sql_file}"
-        ) from exc
+        raise error_type(f"SQL execution failed: {sql_file}") from exc
     except OSError as exc:
-        raise error_type(
-            f"Unable to read SQL file: {sql_file}"
-        ) from exc
+        raise error_type(f"Unable to read SQL file: {sql_file}") from exc
 
 
 def run_transformations(
@@ -64,18 +54,13 @@ def run_transformations(
     logger,
 ) -> None:
     """Execute all transformation SQL scripts."""
-    transformation_directory = (
-        sql_directory / "transformations"
-    )
+    transformation_directory = sql_directory / "transformations"
 
-    transformation_files = sorted(
-        transformation_directory.glob("*.sql")
-    )
+    transformation_files = sorted(transformation_directory.glob("*.sql"))
 
     if not transformation_files:
         raise TransformationError(
-            "No transformation SQL files found: "
-            f"{transformation_directory}"
+            f"No transformation SQL files found: {transformation_directory}"
         )
 
     for sql_file in transformation_files:
@@ -93,15 +78,10 @@ def run_validations(
     logger,
 ) -> None:
     """Execute all validation SQL scripts."""
-    validation_files = sorted(
-        validation_directory.glob("*.sql")
-    )
+    validation_files = sorted(validation_directory.glob("*.sql"))
 
     if not validation_files:
-        raise ValidationError(
-            "No validation SQL files found: "
-            f"{validation_directory}"
-        )
+        raise ValidationError(f"No validation SQL files found: {validation_directory}")
 
     for sql_file in validation_files:
         execute_sql_file(
@@ -117,9 +97,7 @@ def write_run_metadata(
     run_directory: Path,
 ) -> None:
     """Write metadata for a pipeline run."""
-    metadata.write(
-        run_directory / "run_metadata.json"
-    )
+    metadata.write(run_directory / "run_metadata.json")
 
 
 def run_pipeline() -> int:
@@ -132,26 +110,18 @@ def run_pipeline() -> int:
 
     started_at = datetime.now(UTC)
 
-    run_id = started_at.strftime(
-        "%Y%m%dT%H%M%SZ"
-    )
+    run_id = started_at.strftime("%Y%m%dT%H%M%SZ")
 
-    run_directory = (
-        runs_directory / run_id
-    )
+    run_directory = runs_directory / run_id
 
     run_directory.mkdir(
         parents=True,
         exist_ok=True,
     )
 
-    logger = configure_logging(
-        run_directory / "pipeline.log"
-    )
+    logger = configure_logging(run_directory / "pipeline.log")
 
-    logger.info(
-        "Starting restaurant-risk data pipeline"
-    )
+    logger.info("Starting restaurant-risk data pipeline")
     logger.info(
         "Run ID: %s",
         run_id,
@@ -169,18 +139,11 @@ def run_pipeline() -> int:
 
     try:
         if not database_path.exists():
-            raise PipelineError(
-                "DuckDB database not found: "
-                f"{database_path}"
-            )
+            raise PipelineError(f"DuckDB database not found: {database_path}")
 
-        connection = duckdb.connect(
-            str(database_path)
-        )
+        connection = duckdb.connect(str(database_path))
 
-        logger.info(
-            "Connected to DuckDB"
-        )
+        logger.info("Connected to DuckDB")
 
         run_transformations(
             connection=connection,
@@ -188,36 +151,24 @@ def run_pipeline() -> int:
             logger=logger,
         )
 
-        logger.info(
-            "All transformations completed"
-        )
+        logger.info("All transformations completed")
 
         run_validations(
             connection=connection,
-            validation_directory=(
-                sql_directory / "validation"
-            ),
+            validation_directory=(sql_directory / "validation"),
             logger=logger,
         )
 
-        logger.info(
-            "All validations completed"
-        )
+        logger.info("All validations completed")
 
         completed_at = datetime.now(UTC)
 
         metadata = RunMetadata(
             run_id=run_id,
             status="SUCCESS",
-            started_at_utc=(
-                started_at.isoformat()
-            ),
-            completed_at_utc=(
-                completed_at.isoformat()
-            ),
-            duration_seconds=(
-                completed_at - started_at
-            ).total_seconds(),
+            started_at_utc=(started_at.isoformat()),
+            completed_at_utc=(completed_at.isoformat()),
+            duration_seconds=(completed_at - started_at).total_seconds(),
             project_name=config.project_name,
             database_path=str(database_path),
         )
@@ -227,9 +178,7 @@ def run_pipeline() -> int:
             run_directory,
         )
 
-        logger.info(
-            "Pipeline completed successfully"
-        )
+        logger.info("Pipeline completed successfully")
 
         return 0
 
@@ -240,22 +189,14 @@ def run_pipeline() -> int:
             "Pipeline failed: %s",
             exc,
         )
-        logger.error(
-            traceback.format_exc()
-        )
+        logger.error(traceback.format_exc())
 
         metadata = RunMetadata(
             run_id=run_id,
             status="FAILED",
-            started_at_utc=(
-                started_at.isoformat()
-            ),
-            completed_at_utc=(
-                completed_at.isoformat()
-            ),
-            duration_seconds=(
-                completed_at - started_at
-            ).total_seconds(),
+            started_at_utc=(started_at.isoformat()),
+            completed_at_utc=(completed_at.isoformat()),
+            duration_seconds=(completed_at - started_at).total_seconds(),
             project_name=config.project_name,
             database_path=str(database_path),
         )
@@ -271,9 +212,7 @@ def run_pipeline() -> int:
         if connection is not None:
             connection.close()
 
-            logger.info(
-                "DuckDB connection closed"
-            )
+            logger.info("DuckDB connection closed")
 
 
 if __name__ == "__main__":

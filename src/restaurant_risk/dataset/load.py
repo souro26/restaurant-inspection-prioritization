@@ -22,9 +22,10 @@ INNER JOIN processed.labels AS l
     ON f.cutoff_inspection_id = l.cutoff_inspection_id
 """
 
+
 def load_modeling_dataset(database_path: Path) -> pd.DataFrame:
     """Load the features and future labels,"""
-    connection = duckdb.connect(str(database_path), read_only = True)
+    connection = duckdb.connect(str(database_path), read_only=True)
     try:
         df = connection.execute(MODEL_DATASET_QUERY).df()
     finally:
@@ -34,10 +35,12 @@ def load_modeling_dataset(database_path: Path) -> pd.DataFrame:
 
     return df
 
+
 SCORING_POPULATION_QUERY = """
 SELECT *
 FROM processed.scoring_population
 """
+
 
 def load_scoring_population(database_path: Path) -> pd.DataFrame:
     """Load the current restaurant population used for model scoring."""

@@ -11,20 +11,13 @@ def select_top_k(
 ) -> pd.DataFrame:
     """Select the highest-scoring restaurants."""
     if capacity <= 0:
-        raise ValueError(
-            "Capacity must be a positive integer."
-        )
+        raise ValueError("Capacity must be a positive integer.")
 
     if score_column not in data.columns:
-        raise ValueError(
-            f"Score column not found: {score_column}"
-        )
+        raise ValueError(f"Score column not found: {score_column}")
 
     if restaurant_id_column not in data.columns:
-        raise ValueError(
-            "Restaurant ID column not found: "
-            f"{restaurant_id_column}"
-        )
+        raise ValueError(f"Restaurant ID column not found: {restaurant_id_column}")
 
     return (
         data.sort_values(

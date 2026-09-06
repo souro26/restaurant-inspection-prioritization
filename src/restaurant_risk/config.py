@@ -40,22 +40,16 @@ class ProjectConfig:
 def load_yaml(path: Path) -> dict:
     """Load a YAML configuration file."""
     if not path.exists():
-        raise ConfigurationError(
-            f"Configuration file does not exist: {path}"
-        )
+        raise ConfigurationError(f"Configuration file does not exist: {path}")
 
     try:
         with path.open("r", encoding="utf-8") as file:
             data = yaml.safe_load(file)
     except yaml.YAMLError as exc:
-        raise ConfigurationError(
-            f"Failed to parse YAML configuration: {path}"
-        ) from exc
+        raise ConfigurationError(f"Failed to parse YAML configuration: {path}") from exc
 
     if not isinstance(data, dict):
-        raise ConfigurationError(
-            f"Configuration must contain a YAML mapping: {path}"
-        )
+        raise ConfigurationError(f"Configuration must contain a YAML mapping: {path}")
 
     return data
 
@@ -125,6 +119,4 @@ def load_config(project_root: Path) -> ProjectConfig:
         )
 
     except KeyError as exc:
-        raise ConfigurationError(
-            f"Missing required configuration key: {exc}"
-        ) from exc
+        raise ConfigurationError(f"Missing required configuration key: {exc}") from exc

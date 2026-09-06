@@ -31,9 +31,7 @@ def load_model_artifacts(
 ) -> ModelArtifacts:
     """Load and validate the frozen production model artifacts."""
     if not config.model_path.exists():
-        raise ModelArtifactError(
-            f"Model artifact not found: {config.model_path}"
-        )
+        raise ModelArtifactError(f"Model artifact not found: {config.model_path}")
 
     if not config.calibrator_path.exists():
         raise ModelArtifactError(
@@ -55,14 +53,10 @@ def load_model_artifacts(
         ) from exc
 
     if not hasattr(model, "predict_proba"):
-        raise ModelArtifactError(
-            "Loaded model does not provide predict_proba()."
-        )
+        raise ModelArtifactError("Loaded model does not provide predict_proba().")
 
     if not isinstance(calibrator, SigmoidCalibrator):
-        raise ModelArtifactError(
-            "Loaded calibrator is not a SigmoidCalibrator."
-        )
+        raise ModelArtifactError("Loaded calibrator is not a SigmoidCalibrator.")
 
     return ModelArtifacts(
         model=model,
