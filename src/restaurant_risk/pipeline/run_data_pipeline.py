@@ -2,28 +2,17 @@ from __future__ import annotations
 
 import sys
 import traceback
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import duckdb
 
-from restaurant_risk.config import load_yaml
+from restaurant_risk.config import load_config
 from restaurant_risk.exceptions import PipelineError
 from restaurant_risk.logging import configure_logging
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
-CONFIG_PATH = PROJECT_ROOT / "configs" / "project.yaml"
-
-
-def resolve_path(project_root: Path, path: str) -> Path:
-    """Resolve a project-relative path."""
-    resolved = Path(path)
-
-    if not resolved.is_absolute():
-        resolved = project_root / resolved
-
-    return resolved.resolve()
 
 
 def execute_sql_file(
@@ -109,7 +98,7 @@ def write_run_metadata(
         f"run_id={run_id}\n"
         f"status={status}\n"
         f"completed_at_utc="
-        f"{datetime.now(timezone.utc).isoformat()}\n"
+        f"{datetime.now(UTC).isoformat()}\n"
     )
 
     metadata_file = run_directory / "run_metadata.txt"
@@ -122,28 +111,18 @@ def write_run_metadata(
 
 def run_pipeline() -> int:
     """Run the complete data transformation and validation pipeline."""
-    config = load_yaml(CONFIG_PATH)
+    config = load_config(PROJECT_ROOT)
 
-    database_path = resolve_path(
-        PROJECT_ROOT,
-        config["database"]["path"],
-    )
+    database_path = config.database_path
+    sql_directory = config.sql_directory
+    runs_directory = config.runs_directory
 
-    sql_directory = resolve_path(
-        PROJECT_ROOT,
-        config["pipeline"]["sql_directory"],
-    )
-
-    runs_directory = resolve_path(
-        PROJECT_ROOT,
-        config["artifacts"]["runs_directory"],
-    )
-
-    run_id = datetime.now(timezone.utc).strftime(
+    run_id = datetime.now(UTC).strftime(
         "%Y%m%dT%H%M%SZ"
     )
 
     run_directory = runs_directory / run_id
+
     run_directory.mkdir(
         parents=True,
         exist_ok=True,
@@ -211,6 +190,7 @@ def run_pipeline() -> int:
             "Pipeline failed: %s",
             exc,
         )
+
         logger.error(
             traceback.format_exc()
         )
@@ -226,6 +206,7 @@ def run_pipeline() -> int:
     finally:
         if connection is not None:
             connection.close()
+
             logger.info(
                 "DuckDB connection closed"
             )

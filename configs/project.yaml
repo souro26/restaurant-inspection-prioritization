@@ -17,5 +17,10 @@ pipeline:
 
 artifacts:
   runs_directory: "runs"
-  models_directory: "model_artifacts"
+  models_directory: "models"
   reports_directory: "reports"
+  output_directory: "output"
+
+model:
+  model_filename: "logistic_regression_C1.joblib"
+  calibrator_filename: "logistic_regression_C1_sigmoid_calibrator.joblib"
