@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -20,7 +21,13 @@ from restaurant_risk.config import load_config
 from restaurant_risk.exceptions import PipelineError
 from restaurant_risk.modeling.artifacts import ModelArtifactError
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
+
+PROJECT_ROOT = Path(
+    os.environ.get(
+        "RESTAURANT_RISK_PROJECT_ROOT",
+        Path(__file__).resolve().parents[3],
+    )
+)
 
 logger = logging.getLogger("restaurant_risk.api")
 
@@ -53,7 +60,9 @@ def create_app() -> FastAPI:
         try:
             response = await call_next(request)
         except Exception:
-            duration_ms = (time.perf_counter() - started_at) * 1000
+            duration_ms = (
+                time.perf_counter() - started_at
+            ) * 1000
 
             logger.exception(
                 "%s %s | unhandled exception | %.2f ms",
@@ -64,7 +73,9 @@ def create_app() -> FastAPI:
 
             raise
 
-        duration_ms = (time.perf_counter() - started_at) * 1000
+        duration_ms = (
+            time.perf_counter() - started_at
+        ) * 1000
 
         logger.info(
             "%s %s | %s | %.2f ms",
@@ -84,7 +95,9 @@ def create_app() -> FastAPI:
     )
     def health() -> HealthResponse:
         """Return application health."""
-        return HealthResponse(status="ok")
+        return HealthResponse(
+            status="ok"
+        )
 
     @app.get(
         "/model-info",
@@ -95,7 +108,9 @@ def create_app() -> FastAPI:
     def model_info() -> ModelInfoResponse:
         """Return information about the model artifacts."""
         try:
-            return ModelInfoResponse(**scoring_service.get_model_info())
+            return ModelInfoResponse(
+                **scoring_service.get_model_info()
+            )
         except ModelArtifactError as exc:
             logger.error(
                 "Model artifacts unavailable: %s",
@@ -116,7 +131,9 @@ def create_app() -> FastAPI:
     def scoring_status() -> ScoringStatusResponse:
         """Return the current scoring population status."""
         try:
-            return ScoringStatusResponse(**scoring_service.get_scoring_status())
+            return ScoringStatusResponse(
+                **scoring_service.get_scoring_status()
+            )
         except PipelineError as exc:
             logger.error(
                 "Scoring population unavailable: %s",
@@ -139,8 +156,10 @@ def create_app() -> FastAPI:
     ) -> PriorityQueueResponse:
         """Generate a capacity-constrained priority queue."""
         try:
-            queue, population_size = scoring_service.generate_priority_queue(
-                capacity=request.capacity
+            queue, population_size = (
+                scoring_service.generate_priority_queue(
+                    capacity=request.capacity
+                )
             )
 
         except ValueError as exc:
@@ -169,7 +188,12 @@ def create_app() -> FastAPI:
             ) from exc
 
         restaurants = [
-            PriorityRestaurant(**record) for record in queue.to_dict(orient="records")
+            PriorityRestaurant(
+                **record
+            )
+            for record in queue.to_dict(
+                orient="records"
+            )
         ]
 
         return PriorityQueueResponse(
