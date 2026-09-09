@@ -31,9 +31,11 @@ PROJECT_ROOT = Path(
 logger = logging.getLogger("restaurant_risk.api")
 
 
-def create_app() -> FastAPI:
+def create_app(
+    project_root: Path = PROJECT_ROOT,
+) -> FastAPI:
     """Create and configure the FastAPI application."""
-    config = load_config(PROJECT_ROOT)
+    config = load_config(project_root)
 
     scoring_service = ScoringService(config)
 
