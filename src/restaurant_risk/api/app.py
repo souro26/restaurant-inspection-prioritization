@@ -17,7 +17,10 @@ from restaurant_risk.api.schemas import (
     ScoringStatusResponse,
 )
 from restaurant_risk.api.service import ScoringService
-from restaurant_risk.config import load_config
+from restaurant_risk.config import (
+    ProjectConfig,
+    load_config,
+)
 from restaurant_risk.exceptions import PipelineError
 from restaurant_risk.modeling.artifacts import ModelArtifactError
 
@@ -33,9 +36,11 @@ logger = logging.getLogger("restaurant_risk.api")
 
 def create_app(
     project_root: Path = PROJECT_ROOT,
+    config: ProjectConfig | None = None,
 ) -> FastAPI:
     """Create and configure the FastAPI application."""
-    config = load_config(project_root)
+    if config is None:
+        config = load_config(project_root)
 
     scoring_service = ScoringService(config)
 
