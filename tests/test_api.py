@@ -139,3 +139,30 @@ def test_openapi_documentation():
     assert "/model-info" in paths
     assert "/scoring-status" in paths
     assert "/priority-queue" in paths
+
+
+def test_priority_queue_returns_503_when_database_is_unavailable(
+    monkeypatch,
+):
+    """Unavailable scoring data should return HTTP 503."""
+    from restaurant_risk.exceptions import SourceDataError
+
+    def raise_source_error(self):
+        raise SourceDataError(
+            "Unable to open DuckDB database."
+        )
+
+    monkeypatch.setattr(
+        "restaurant_risk.api.service.ScoringService.load_population",
+        raise_source_error,
+    )
+
+    response = client.post(
+        "/priority-queue",
+        json={"capacity": 5},
+    )
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == (
+        "Unable to open DuckDB database."
+    )

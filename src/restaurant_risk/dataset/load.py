@@ -5,6 +5,8 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 
+from restaurant_risk.exceptions import SourceDataError
+
 MODEL_DATASET_QUERY = """
 SELECT
     f.*,
@@ -24,14 +26,30 @@ INNER JOIN processed.labels AS l
 
 
 def load_modeling_dataset(database_path: Path) -> pd.DataFrame:
-    """Load the features and future labels,"""
-    connection = duckdb.connect(str(database_path), read_only=True)
+    """Load the features and future labels."""
+    try:
+        connection = duckdb.connect(
+            str(database_path),
+            read_only=True,
+        )
+    except duckdb.Error as exc:
+        raise SourceDataError(
+            f"Unable to open DuckDB database: {database_path}"
+        ) from exc
+
     try:
         df = connection.execute(MODEL_DATASET_QUERY).df()
+    except duckdb.Error as exc:
+        raise SourceDataError(
+            f"Unable to load modeling dataset from: {database_path}"
+        ) from exc
     finally:
         connection.close()
+
     df.cutoff_date = pd.to_datetime(df.cutoff_date)
-    df.target_inspection_date = pd.to_datetime(df.target_inspection_date)
+    df.target_inspection_date = pd.to_datetime(
+        df.target_inspection_date
+    )
 
     return df
 
@@ -44,12 +62,21 @@ FROM processed.scoring_population
 
 def load_scoring_population(database_path: Path) -> pd.DataFrame:
     """Load the current restaurant population used for model scoring."""
-    connection = duckdb.connect(str(database_path), read_only=True)
+    try:
+        connection = duckdb.connect(str(database_path), read_only=True)
+    except duckdb.Error as exc:
+        raise SourceDataError(
+            f"Unable to open DuckDB database: {database_path}"
+        ) from exc
+
     try:
         df = connection.execute(SCORING_POPULATION_QUERY).df()
+    except duckdb.Error as exc:
+        raise SourceDataError(
+            "Unable to load scoring population from DuckDB."
+        ) from exc
     finally:
         connection.close()
 
     df.cutoff_date = pd.to_datetime(df.cutoff_date)
-
     return df
