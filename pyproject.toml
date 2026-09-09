@@ -21,6 +21,14 @@ dependencies = [
 ]
 
 
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "ruff",
+    "httpx2",
+]
+
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
