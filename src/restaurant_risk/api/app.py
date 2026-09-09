@@ -21,7 +21,6 @@ from restaurant_risk.config import load_config
 from restaurant_risk.exceptions import PipelineError
 from restaurant_risk.modeling.artifacts import ModelArtifactError
 
-
 PROJECT_ROOT = Path(
     os.environ.get(
         "RESTAURANT_RISK_PROJECT_ROOT",
