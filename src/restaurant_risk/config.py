@@ -36,6 +36,11 @@ class ProjectConfig:
     model_path: Path
     calibrator_path: Path
 
+    storage_provider: str
+    s3_bucket: str
+    s3_prefix: str
+    s3_region: str
+
 
 def load_yaml(path: Path) -> dict:
     """Load a YAML configuration file."""
@@ -78,6 +83,7 @@ def load_config(project_root: Path) -> ProjectConfig:
         pipeline = config["pipeline"]
         artifacts = config["artifacts"]
         model = config["model"]
+        storage = config.get("storage", {})
 
         models_directory = _resolve_path(
             project_root,
@@ -116,6 +122,10 @@ def load_config(project_root: Path) -> ProjectConfig:
             ),
             model_path=models_directory / model["model_filename"],
             calibrator_path=models_directory / model["calibrator_filename"],
+            storage_provider=str(storage.get("provider", "local")),
+            s3_bucket=str(storage.get("s3_bucket", "")),
+            s3_prefix=str(storage.get("s3_prefix", "restaurant-risk")),
+            s3_region=str(storage.get("s3_region", "ap-south-1")),
         )
 
     except KeyError as exc:

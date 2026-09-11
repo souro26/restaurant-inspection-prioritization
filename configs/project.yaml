@@ -24,3 +24,9 @@ artifacts:
 model:
   model_filename: "logistic_regression_C1.joblib"
   calibrator_filename: "logistic_regression_C1_sigmoid_calibrator.joblib"
+
+storage:
+  provider: "local"
+  s3_bucket: ""
+  s3_prefix: "restaurant-risk"
+  s3_region: "ap-south-1"
