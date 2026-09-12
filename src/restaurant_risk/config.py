@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -15,27 +16,21 @@ class ProjectConfig:
     """Resolved configuration for the restaurant risk project."""
 
     project_root: Path
-
     project_name: str
     random_seed: int
     timezone: str
-
     source_dataset_id: str
     source_name: str
     source_url: str
-
     database_path: Path
     sql_directory: Path
     raw_table: str
-
     runs_directory: Path
     models_directory: Path
     reports_directory: Path
     output_directory: Path
-
     model_path: Path
     calibrator_path: Path
-
     storage_provider: str
     s3_bucket: str
     s3_prefix: str
@@ -45,16 +40,22 @@ class ProjectConfig:
 def load_yaml(path: Path) -> dict:
     """Load a YAML configuration file."""
     if not path.exists():
-        raise ConfigurationError(f"Configuration file does not exist: {path}")
+        raise ConfigurationError(
+            f"Configuration file does not exist: {path}"
+        )
 
     try:
         with path.open("r", encoding="utf-8") as file:
             data = yaml.safe_load(file)
     except yaml.YAMLError as exc:
-        raise ConfigurationError(f"Failed to parse YAML configuration: {path}") from exc
+        raise ConfigurationError(
+            f"Failed to parse YAML configuration: {path}"
+        ) from exc
 
     if not isinstance(data, dict):
-        raise ConfigurationError(f"Configuration must contain a YAML mapping: {path}")
+        raise ConfigurationError(
+            f"Configuration must contain a YAML mapping: {path}"
+        )
 
     return data
 
@@ -72,8 +73,8 @@ def _resolve_path(project_root: Path, value: str) -> Path:
 def load_config(project_root: Path) -> ProjectConfig:
     """Load and validate project configuration."""
     project_root = project_root.resolve()
-    config_path = project_root / "configs" / "project.yaml"
 
+    config_path = project_root / "configs" / "project.yaml"
     config = load_yaml(config_path)
 
     try:
@@ -120,13 +121,47 @@ def load_config(project_root: Path) -> ProjectConfig:
                 project_root,
                 artifacts["output_directory"],
             ),
-            model_path=models_directory / model["model_filename"],
-            calibrator_path=models_directory / model["calibrator_filename"],
-            storage_provider=str(storage.get("provider", "local")),
-            s3_bucket=str(storage.get("s3_bucket", "")),
-            s3_prefix=str(storage.get("s3_prefix", "restaurant-risk")),
-            s3_region=str(storage.get("s3_region", "ap-south-1")),
+            model_path=(
+                models_directory
+                / model["model_filename"]
+            ),
+            calibrator_path=(
+                models_directory
+                / model["calibrator_filename"]
+            ),
+
+            # Environment variables override YAML configuration.
+            # This allows the same Docker image to run locally
+            # or in AWS without changing project.yaml.
+            storage_provider=os.environ.get(
+                "RESTAURANT_RISK_STORAGE_PROVIDER",
+                str(storage.get("provider", "local")),
+            ),
+            s3_bucket=os.environ.get(
+                "RESTAURANT_RISK_S3_BUCKET",
+                str(storage.get("s3_bucket", "")),
+            ),
+            s3_prefix=os.environ.get(
+                "RESTAURANT_RISK_S3_PREFIX",
+                str(
+                    storage.get(
+                        "s3_prefix",
+                        "restaurant-risk",
+                    )
+                ),
+            ),
+            s3_region=os.environ.get(
+                "AWS_REGION",
+                str(
+                    storage.get(
+                        "s3_region",
+                        "ap-south-1",
+                    )
+                ),
+            ),
         )
 
     except KeyError as exc:
-        raise ConfigurationError(f"Missing required configuration key: {exc}") from exc
+        raise ConfigurationError(
+            f"Missing required configuration key: {exc}"
+        ) from exc
