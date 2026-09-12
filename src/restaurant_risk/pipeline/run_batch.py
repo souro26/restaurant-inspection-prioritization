@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import os
 import shutil
 import sys
 import tempfile
@@ -33,7 +34,12 @@ from restaurant_risk.storage.artifacts import (
 )
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
+PROJECT_ROOT = Path(
+    os.environ.get(
+        "RESTAURANT_RISK_PROJECT_ROOT",
+        Path(__file__).resolve().parents[3],
+    )
+)
 
 
 @dataclass(frozen=True)
