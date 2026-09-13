@@ -13,7 +13,9 @@ RUN pip install --no-cache-dir .
 
 ENV RESTAURANT_RISK_PROJECT_ROOT=/app
 
-RUN useradd --create-home --shell /usr/sbin/nologin appuser
+RUN useradd --create-home --shell /usr/sbin/nologin appuser \
+    && mkdir -p /app/data /app/runs /app/reports /app/output \
+    && chown -R appuser:appuser /app
 
 USER appuser
 
