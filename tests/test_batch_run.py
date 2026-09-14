@@ -169,6 +169,7 @@ def test_run_batch_success_writes_unified_run_artifacts(
     assert (run_directory / "pipeline.log").exists()
     assert (run_directory / "restaurant_risk_scores.csv").exists()
     assert (run_directory / "restaurant_priority_queue.csv").exists()
+    assert (run_directory / "monitoring_metrics.json").exists()
 
     run_metadata = json.loads((run_directory / "run_metadata.json").read_text())
     assert run_metadata["status"] == "SUCCESS"
@@ -178,6 +179,18 @@ def test_run_batch_success_writes_unified_run_artifacts(
     assert batch_metadata["capacity"] == 3
     assert batch_metadata["population_size"] == 5
     assert batch_metadata["priority_queue_size"] == 3
+
+    monitoring_metrics = json.loads(
+        (run_directory / "monitoring_metrics.json").read_text()
+    )
+
+    assert monitoring_metrics["run_id"] == run_metadata["run_id"]
+    assert monitoring_metrics["status"] == "SUCCESS"
+    assert monitoring_metrics["capacity"] == 3
+    assert monitoring_metrics["population_size"] == 5
+    assert monitoring_metrics["priority_queue_size"] == 3
+    assert monitoring_metrics["prediction_count"] == 5
+    assert monitoring_metrics["unique_restaurants"] == 5
 
     queue = pd.read_csv(run_directory / "restaurant_priority_queue.csv")
     assert len(queue) == 3

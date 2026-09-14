@@ -22,6 +22,10 @@ from restaurant_risk.dataset.load import load_scoring_population
 from restaurant_risk.exceptions import PipelineError
 from restaurant_risk.logging import configure_logging
 from restaurant_risk.modeling.artifacts import ModelArtifactError
+from restaurant_risk.monitoring.metrics import (
+    build_batch_metrics,
+    publish_cloudwatch_metrics,
+)
 from restaurant_risk.pipeline.metadata import RunMetadata
 from restaurant_risk.pipeline.run_data_pipeline import (
     run_transformations,
@@ -404,6 +408,14 @@ def _sync_cloud_artifacts(
         ),
         (
             run_directory
+            / "monitoring_metrics.json",
+            (
+                f"runs/{run_id}/"
+                "monitoring_metrics.json"
+            ),
+        ),
+        (
+            run_directory
             / "pipeline.log",
             (
                 f"runs/{run_id}/"
@@ -521,6 +533,8 @@ def run_batch(
     priority_queue_path: str | None = None
 
     return_code = 1
+
+    duration_seconds: float | None = None
 
     try:
         cloud_mode = (
@@ -729,6 +743,56 @@ def run_batch(
                     / "batch_metadata.json"
                 )
 
+                duration_seconds = (
+                    completed_at - started_at
+                ).total_seconds()
+
+                monitoring_metrics = build_batch_metrics(
+                    run_id=run_id,
+                    status=status,
+                    capacity=capacity,
+                    population_size=population_size,
+                    priority_queue_size=priority_queue_size,
+                    duration_seconds=duration_seconds,
+                    scores_path=run_scores_path,
+                )
+
+                monitoring_path = (
+                    run_directory
+                    / "monitoring_metrics.json"
+                )
+
+                monitoring_path.write_text(
+                    json.dumps(
+                        monitoring_metrics,
+                        indent=2,
+                        sort_keys=True,
+                    )
+                    + "\n",
+                    encoding="utf-8",
+                )
+
+                logger.info(
+                    "Monitoring metrics written to %s",
+                    monitoring_path,
+                )
+
+                try:
+                    publish_cloudwatch_metrics(
+                        monitoring_metrics,
+                        region_name=config.aws_region,
+                    )
+
+                    logger.info(
+                        "CloudWatch monitoring metrics published successfully"
+                    )
+
+                except Exception as exc:
+                    logger.error(
+                        "Failed to publish CloudWatch monitoring metrics: %s",
+                        exc,
+                    )
+
                 logger.info(
                     "Uploading batch artifacts to S3"
                 )
@@ -901,6 +965,12 @@ def run_batch(
         return_code = 1
 
     finally:
+        completed_at = datetime.now(UTC)
+
+        duration_seconds = (
+            completed_at - started_at
+        ).total_seconds()
+
         if connection is not None:
             connection.close()
 
@@ -913,10 +983,6 @@ def run_batch(
             == "s3"
             and return_code == 0
         ):
-            completed_at = datetime.now(
-                UTC
-            )
-
             pipeline_metadata = RunMetadata(
                 run_id=run_id,
                 status=status,
@@ -926,10 +992,7 @@ def run_batch(
                 completed_at_utc=(
                     completed_at.isoformat()
                 ),
-                duration_seconds=(
-                    completed_at
-                    - started_at
-                ).total_seconds(),
+                duration_seconds=duration_seconds,
                 project_name=(
                     config.project_name
                 ),
@@ -960,6 +1023,41 @@ def run_batch(
             batch_metadata.write(
                 run_directory
                 / "batch_metadata.json"
+            )
+
+        if return_code != 0 or config.storage_provider.lower() != "s3":
+            monitoring_path = (
+                run_directory
+                / "monitoring_metrics.json"
+            )
+
+            monitoring_metrics = build_batch_metrics(
+                run_id=run_id,
+                status=status,
+                capacity=capacity,
+                population_size=population_size,
+                priority_queue_size=priority_queue_size,
+                duration_seconds=duration_seconds,
+                scores_path=(
+                    Path(scores_path)
+                    if scores_path is not None
+                    else None
+                ),
+            )
+
+            monitoring_path.write_text(
+                json.dumps(
+                    monitoring_metrics,
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            logger.info(
+                "Monitoring metrics written to %s",
+                monitoring_path,
             )
 
     return return_code
