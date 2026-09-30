@@ -6,7 +6,7 @@ import pandas as pd
 import spaces
 
 
-@spaces.GPU
+@spaces.GPU(duration=1)
 def _zerogpu_compatibility_hook():
     """Minimal ZeroGPU hook; the application itself remains CPU-only."""
     return None
