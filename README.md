@@ -2,6 +2,8 @@
 
 A batch pipeline for prioritizing NYC restaurant inspections using a logistic regression model trained on historical DOHMH inspection records. The system produces a capacity-constrained inspection priority queue, ranks restaurants by their calibrated probability of a high-severity outcome at the next Cycle Inspection / Initial Inspection, and publishes artifacts to Amazon S3.
 
+**[Live Demo](https://huggingface.co/spaces/souro26/restaurant-inspection-prioritization)**
+
 ---
 
 ## Problem
