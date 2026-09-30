@@ -1,0 +1,51 @@
+{
+  "family": "restaurant-risk-batch",
+  "taskRoleArn": "arn:aws:iam::269626332583:role/restaurant-risk-batch-task-role",
+  "executionRoleArn": "arn:aws:iam::269626332583:role/ecsTaskExecutionRole",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "1024",
+  "memory": "2048",
+  "containerDefinitions": [
+    {
+      "name": "restaurant-risk-batch",
+      "image": "269626332583.dkr.ecr.ap-south-1.amazonaws.com/restaurant-risk-api:v5",
+      "essential": true,
+      "environment": [
+        {
+          "name": "AWS_REGION",
+          "value": "ap-south-1"
+        },
+        {
+          "name": "RESTAURANT_RISK_S3_BUCKET",
+          "value": "restaurant-risk-269626332583"
+        },
+        {
+          "name": "RESTAURANT_RISK_S3_PREFIX",
+          "value": "restaurant-risk"
+        },
+        {
+          "name": "RESTAURANT_RISK_STORAGE_PROVIDER",
+          "value": "s3"
+        }
+      ],
+      "command": [
+        "python",
+        "-m",
+        "restaurant_risk.pipeline.run_batch",
+        "--capacity",
+        "100"
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "restaurant-risk-batch",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
