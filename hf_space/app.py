@@ -775,7 +775,6 @@ body {
     background: rgba(255, 255, 255, 0.72);
     box-shadow:
         0 12px 38px rgba(15, 23, 42, 0.06);
-    backdrop-filter: blur(10px);
 }
 
 .dark .control-panel {
@@ -785,15 +784,13 @@ body {
 
 /* ==========================================================
    Dropdown stacking
-   Let Gradio control the dropdown menu positioning.
-   We only make sure the control panel can overflow above the
-   sections that follow it. Forcing position:absolute on the
-   Gradio options container breaks its native placement logic.
+   Keep the control panel above the content below it, while
+   leaving Gradio's native dropdown popup positioning intact.
 ========================================================== */
 
 .control-panel {
     position: relative !important;
-    z-index: 20 !important;
+    z-index: 100 !important;
     overflow: visible !important;
 }
 
@@ -801,11 +798,6 @@ body {
 .control-panel .gradio-dropdown,
 .control-panel .gradio-dropdown > div {
     overflow: visible !important;
-}
-
-.control-panel .gradio-dropdown {
-    position: relative !important;
-    z-index: 30 !important;
 }
 
 
