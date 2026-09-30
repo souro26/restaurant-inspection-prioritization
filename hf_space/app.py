@@ -3,6 +3,13 @@ from pathlib import Path
 
 import gradio as gr
 import pandas as pd
+import spaces
+
+
+@spaces.GPU
+def _zerogpu_compatibility_hook():
+    """Minimal ZeroGPU hook; the application itself remains CPU-only."""
+    return None
 
 
 # ============================================================
